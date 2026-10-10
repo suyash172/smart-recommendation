@@ -1,0 +1,122 @@
+# Bank Status API OpenAPI Specification
+
+openapi: 3.0.3
+info:
+  title: Bank Status API
+  description: Mock API providing account verification and bank availability data.
+  version: 2.0.0
+servers:
+  - url: http://localhost:8001
+    description: Mock Bank Status Server
+
+paths:
+  /api/accounts:
+    get:
+      tags:
+        - Account Services
+      summary: Verify account existence and status
+      parameters:
+        - name: account-number
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+  /api/accounts-balance:
+    get:
+      tags:
+        - Account Services
+      summary: Check account balance
+      parameters:
+        - name: account-number
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Balance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+
+  /api/bank-status:
+    get:
+      tags:
+        - Bank Availability
+      summary: Check bank network status by BIC code
+      parameters:
+        - name: bic-code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bank status details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankStatusResponse'
+
+components:
+  schemas:
+    AccountResponse:
+      type: object
+      required: [exists, status, account_number, account_name, currency]
+      properties:
+        exists:
+          type: boolean
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, FROZEN, CLOSED, NOT_FOUND]
+        account_number:
+          type: string
+          description: The account number / IBAN that was queried.
+          example: "DE89370400440532013000"
+        account_name:
+          type: string
+          description: Name of the account holder.
+          example: "Acme GmbH"
+        currency:
+          type: string
+          description: ISO 4217 currency code of the account.
+          example: "EUR"
+        account_type:
+          type: string
+          enum: [CHECKING, SAVINGS]
+
+    BalanceResponse:
+      type: object
+      properties:
+        current:
+          type: number
+        available:
+          type: number
+
+    BankStatusResponse:
+      type: object
+      required: [bic_code, bank_status]
+      properties:
+        bic_code:
+          type: string
+          description: BIC (Business Identifier Code) of the bank.
+          example: "DEUTDEFF"
+        bank_status:
+          type: string
+          enum: [ONLINE, DEGRADED, DOWN]
+        estimated_recovery:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Estimated time when the bank network is expected to recover.
+            Null when the bank is ONLINE or no recovery estimate is available.

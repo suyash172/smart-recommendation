@@ -1,0 +1,60 @@
+{
+  "scenario_id": "E11",
+  "name": "Beneficiary name in Arabic - transliteration matches registered name",
+  "category": "name-mismatch",
+  "description": "Transaction failed with NAME_MISMATCH. The beneficiary name in the transaction is in Arabic script ('شركة الأمل للتجارة') while the account API holds the English transliteration 'Al-Amal Trading Co.'. Expected LLM behaviour: verify_account returns ACTIVE with account_name 'Al-Amal Trading Co.'; the agent recognises the Arabic name and the transliteration as the SAME entity and recommends RETRY_AFTER_UPDATE with a suggestion to use the registered (transliterated) beneficiary name.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Al-Amal Trading Co.",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E11-ARABIC",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NAME_MISMATCH",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "شركة الأمل للتجارة",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E11-ARABIC",
+        "recommendation": "RETRY_AFTER_UPDATE",
+        "confidence_score": 0.8,
+        "explanation": "The submitted beneficiary name 'شركة الأمل للتجارة' is in Arabic script, while the account is registered under the English transliteration 'Al-Amal Trading Co.'. These refer to the same entity, so the mismatch is purely a script/representation difference. Using the registered transliterated name will resolve the rejection.",
+        "optimal_timing": null,
+        "correction_suggestions": [
+          "Update the beneficiary name to the registered transliteration: Al-Amal Trading Co."
+        ]
+      },
+      "notes": "Agent must recognise Arabic script vs English transliteration of the same entity. Suggestions must reference name/beneficiary/match/correct/update/amal."
+    }
+  ]
+}

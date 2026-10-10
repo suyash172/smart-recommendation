@@ -1,0 +1,52 @@
+{
+  "scenario_id": "E8",
+  "name": "Persistent bank API failure - agent loop exhaustion",
+  "category": "resilience",
+  "description": "ALL bank API endpoints return HTTP 503 on every call. The LLM attempts to gather information via tool calls but each attempt fails. When the agent loop exhausts its budget (max_agent_loops=4) without producing a final answer, the system injects NO_RECOMMENDATION with low confidence (< 0.5) and an explanation stating verification was impossible. NO_RECOMMENDATION is injected by the system; the LLM itself must never emit it. No correction suggestions may be provided when no tool data is available.",
+  "mock_bank_state": {
+    "bank_status": {},
+    "accounts": {},
+    "balances": {},
+    "fault_injection": {
+      "forced_status_code": 503,
+      "applies_to": "all endpoints (/api/bank-status, /api/accounts, /api/accounts-balance)"
+    }
+  },
+  "config": {
+    "max_agent_loops": 4
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E8-LOOP-EXHAUST",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "INVALID_ACCOUNT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E8-LOOP-EXHAUST",
+        "recommendation": "NO_RECOMMENDATION",
+        "confidence_score": 0.3,
+        "explanation": "Unable to produce a recommendation: all bank verification APIs returned HTTP 503 (Service Unavailable) on every attempt within the agent loop budget. The account status and bank network state could not be verified, so no safe retry decision can be made at this time.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "System-injected fallback after loop-budget exhaustion; confidence < 0.5; explanation must acknowledge API unavailability (unavailable/could not/unable/failed/error/503/impossible); correction_suggestions must be null or absent."
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "scenario_id": "E6",
+  "name": "Retry limit circuit breaker boundary (max_retry_count = 3)",
+  "category": "retry-limit",
+  "description": "Circuit-breaker boundary at the HTTP layer. retry_count=2 (below limit) reaches the agent normally; retry_count=3 (at limit) and retry_count=5 (above limit) short-circuit to HTTP 429 with DONT_RETRY, confidence 1.0, and an explanation containing 'Max retry limit reached' - without invoking the LLM.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Test Account Holder",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "config": {
+    "max_retry_count": 3
+  },
+  "api_requests": [
+    {
+      "label": "below_limit",
+      "request": {
+        "transaction_id": "TXN-E2E-E6-BELOW",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NETWORK_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 2
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E6-BELOW",
+        "recommendation": "RETRY_NOW",
+        "confidence_score": 0.85,
+        "explanation": "The beneficiary bank (DEUTDEFF) is ONLINE and the account DE89370400440532013000 is ACTIVE. The NETWORK_TIMEOUT appears transient and this is still within the allowed retry budget, so the transaction can be retried now.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "Below the limit: normal agent flow, any valid recommendation except DONT_RETRY."
+    },
+    {
+      "label": "at_limit",
+      "request": {
+        "transaction_id": "TXN-E2E-E6-AT",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NETWORK_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 3
+      },
+      "expected_http_status": 429,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E6-AT",
+        "recommendation": "DONT_RETRY",
+        "confidence_score": 1.0,
+        "explanation": "Max retry limit reached. The transaction has already been retried 3 times, which meets the configured maximum (max_retry_count=3). No further retries will be attempted.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "At the limit: circuit breaker trips, LLM is NOT invoked. Explanation must contain 'Max retry limit reached'; confidence exactly 1.0."
+    },
+    {
+      "label": "over_limit",
+      "request": {
+        "transaction_id": "TXN-E2E-E6-OVER",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NETWORK_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 5
+      },
+      "expected_http_status": 429,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E6-OVER",
+        "recommendation": "DONT_RETRY",
+        "confidence_score": 1.0,
+        "explanation": "Max retry limit reached. The transaction has already been retried 5 times, exceeding the configured maximum (max_retry_count=3). No further retries will be attempted.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "Exceeding the limit: same 429 behaviour as at the limit."
+    }
+  ]
+}

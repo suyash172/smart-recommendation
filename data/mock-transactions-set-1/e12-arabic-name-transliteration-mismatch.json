@@ -1,0 +1,61 @@
+{
+  "scenario_id": "E12",
+  "name": "Beneficiary name in Arabic - transliteration does NOT match registered name",
+  "category": "name-mismatch",
+  "description": "Transaction failed with NAME_MISMATCH. The beneficiary name in the transaction is 'شركة الأمل للتجارة' (≈ 'Al-Amal Trading Co.') but the account API holds 'Al-Hope Trading LLC' - a genuinely different entity. Expected LLM behaviour: verify_account returns ACTIVE with the different registered name; the agent recognises the transliteration does NOT match and recommends RETRY_AFTER_UPDATE with suggestions to verify/correct the beneficiary name against the registered account holder.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Al-Hope Trading LLC",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E12-MISMATCH",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NAME_MISMATCH",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "شركة الأمل للتجارة",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E12-MISMATCH",
+        "recommendation": "RETRY_AFTER_UPDATE",
+        "confidence_score": 0.75,
+        "explanation": "The submitted beneficiary name 'شركة الأمل للتجارة' transliterates to approximately 'Al-Amal Trading Co.', but the account DE89370400440532013000 is registered under a different name, 'Al-Hope Trading LLC'. These appear to be different entities, so the beneficiary name must be verified and corrected to match the registered account holder before retrying.",
+        "optimal_timing": null,
+        "correction_suggestions": [
+          "Verify the correct legal name of the beneficiary - the submitted name does not match the registered account holder 'Al-Hope Trading LLC'.",
+          "Confirm with the beneficiary whether the intended recipient is 'Al-Hope Trading LLC' and update the name accordingly."
+        ]
+      },
+      "notes": "Contrast with E11: same Arabic input, but the registered name is a different entity, so the correction must ask for verification against the registered account holder. Suggestions must reference name/beneficiary/match/verify/confirm/correct/update/registered."
+    }
+  ]
+}

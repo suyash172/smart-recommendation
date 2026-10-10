@@ -1,0 +1,56 @@
+{
+  "scenario_id": "E4",
+  "name": "Frozen account with insufficient funds",
+  "category": "account-failure",
+  "description": "Beneficiary account is FROZEN and the transaction failed with INSUFFICIENT_FUNDS. The agent should recommend RETRY_AFTER_UPDATE with correction suggestions (unfreeze/credit the account before retrying).",
+  "mock_bank_state": {
+    "bank_status": {},
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "FROZEN",
+        "account_name": "Test Account Holder",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-0001",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "INSUFFICIENT_FUNDS",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-0001",
+        "recommendation": "RETRY_AFTER_UPDATE",
+        "confidence_score": 0.8,
+        "explanation": "Verification shows the beneficiary account DE89370400440532013000 is currently FROZEN, which explains the INSUFFICIENT_FUNDS rejection - a frozen account cannot accept credits until it is released. The payment details themselves are valid, so the transaction can be retried once the account is unfrozen.",
+        "optimal_timing": null,
+        "correction_suggestions": [
+          "Contact the beneficiary bank to unfreeze account DE89370400440532013000 before resubmitting the payment.",
+          "Confirm the account status is ACTIVE again after the freeze is lifted."
+        ]
+      },
+      "notes": "Suggestions should reference the frozen account state and/or funding requirement."
+    }
+  ]
+}

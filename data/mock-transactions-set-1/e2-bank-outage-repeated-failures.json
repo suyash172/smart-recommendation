@@ -1,0 +1,83 @@
+{
+  "scenario_id": "E2",
+  "name": "Bank outage - repeated gateway timeouts",
+  "category": "network-failure",
+  "description": "Beneficiary bank is DOWN. The same transaction fails repeatedly with GATEWAY_TIMEOUT (retry_count 1 and 2). Both attempts should yield RETRY_LATER with an optimal_timing and an explanation referencing the bank/network state.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "DOWN",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {},
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E2-1",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "GATEWAY_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E2-1",
+        "recommendation": "RETRY_LATER",
+        "confidence_score": 0.85,
+        "explanation": "The beneficiary bank (DEUTDEFF) is currently DOWN, so the GATEWAY_TIMEOUT is caused by an upstream network outage rather than a problem with the payment details. Retrying immediately would fail again, so the transaction should be retried later once the bank network recovers.",
+        "optimal_timing": "2026-09-26T13:00:00Z",
+        "correction_suggestions": null
+      },
+      "notes": "Bank DOWN with no estimated recovery: schedule a retry a few hours out. Explanation must reference the bank/network state."
+    },
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E2-2",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "GATEWAY_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 2
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E2-2",
+        "recommendation": "RETRY_LATER",
+        "confidence_score": 0.85,
+        "explanation": "This is the second retry attempt and the beneficiary bank (DEUTDEFF) is still DOWN. The persistent GATEWAY_TIMEOUT confirms an ongoing upstream outage. The transaction should continue to be deferred until the bank network is back online.",
+        "optimal_timing": "2026-09-26T15:00:00Z",
+        "correction_suggestions": null
+      },
+      "notes": "Second retry while bank still DOWN - same RETRY_LATER expectation as the first attempt, with a later optimal_timing."
+    }
+  ]
+}

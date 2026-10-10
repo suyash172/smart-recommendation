@@ -1,0 +1,63 @@
+{
+  "scenario_id": "E5",
+  "name": "Healthy system - transient processing glitch",
+  "category": "healthy",
+  "description": "All systems nominal: bank ONLINE, account ACTIVE, sufficient available balance. A PROCESSING_ERROR is clearly transient, so the agent should recommend RETRY_NOW with high confidence.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Test Account Holder",
+        "currency": "USD"
+      }
+    },
+    "balances": {
+      "DE89370400440532013000": {
+        "current": 100000.0,
+        "available": 95000.0
+      }
+    },
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-0001",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "PROCESSING_ERROR",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-0001",
+        "recommendation": "RETRY_NOW",
+        "confidence_score": 0.9,
+        "explanation": "The beneficiary bank (DEUTDEFF) is ONLINE, the beneficiary account DE89370400440532013000 is ACTIVE, and the available balance comfortably covers the amount. The PROCESSING_ERROR is a transient internal glitch with nothing to fix or wait for, so the transaction can be retried immediately.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "High-confidence immediate retry: nothing to fix, nothing to wait for. Confidence must be >= 0.7."
+    }
+  ]
+}

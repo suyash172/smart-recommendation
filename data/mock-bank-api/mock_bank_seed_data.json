@@ -1,0 +1,43 @@
+{
+  "banks": {
+    "DEUTDEFF": { "data": { "bic_code": "DEUTDEFF", "bank_status": "ONLINE", "estimated_recovery": null } },
+    "CHASUS33": { "data": { "bic_code": "CHASUS33", "bank_status": "ONLINE", "estimated_recovery": null } },
+    "HDFCINBB": { "data": { "bic_code": "HDFCINBB", "bank_status": "DEGRADED", "estimated_recovery": "2026-09-28T15:00:00Z" } },
+    "BARCGB22": { "data": { "bic_code": "BARCGB22", "bank_status": "DOWN", "estimated_recovery": "2026-09-29T06:00:00Z" } },
+    "SOGEFRPP": { "data": { "bic_code": "SOGEFRPP", "bank_status": "ONLINE", "estimated_recovery": null } },
+    "TOKYJTMM": { "data": { "bic_code": "TOKYJTMM", "bank_status": "DEGRADED", "estimated_recovery": "2026-09-28T18:00:00Z" } },
+    "CITIHKAX": { "fault": { "type": "timeout", "delay_seconds": 15 } },
+    "BKBRBRLJ": { "fault": { "type": "http_error", "status_code": 503 } },
+    "NABAAU3X": { "fault": { "type": "http_error", "status_code": 500 } }
+  },
+  "accounts": {
+    "DE89370400440532013000": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Acme GmbH", "currency": "EUR", "account_type": "CHECKING" } },
+    "DE89 3704 0044 0532 0130 00": { "data": { "exists": false, "status": "NOT_FOUND", "account_name": null, "currency": null } },
+    "US12345678901234567890": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Smith Consulting Group LLC", "currency": "USD", "account_type": "CHECKING" } },
+    "IN400111001234567890": { "data": { "exists": true, "status": "FROZEN", "account_name": "Beta Industries Pvt Ltd", "currency": "INR", "account_type": "CHECKING" } },
+    "GB29NWBK60161331926819": { "data": { "exists": true, "status": "INACTIVE", "account_name": "Gamma Trading Ltd", "currency": "GBP", "account_type": "SAVINGS" } },
+    "FR1420041010050500013M02606": { "data": { "exists": false, "status": "NOT_FOUND", "account_name": null, "currency": null } },
+    "JP3500000000123456789012": { "data": { "exists": true, "status": "CLOSED", "account_name": "Delta Corp KK", "currency": "JPY", "account_type": "CHECKING" } },
+    "DE00789012345678901234": { "fault": { "type": "timeout", "delay_seconds": 15 } },
+    "FR0089012345678901234567890": { "fault": { "type": "http_error", "status_code": 503 } },
+    "GB00901234567890123456": { "fault": { "type": "malformed_json" } },
+    "IN001111111111111111111": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Epsilon SA", "currency": "EUR", "account_type": "CHECKING" } },
+    "JP002222222222222222222": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Zeta AG", "currency": "CHF", "account_type": "CHECKING" } },
+    "DE00333333333333333333": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Eta BV", "currency": "EUR", "account_type": "CHECKING" } },
+    "DE44500105175487661300": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Al-Amal Trading Co.", "currency": "USD", "account_type": "CHECKING" } },
+    "DE75300510040532624567": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Al-Hope Trading LLC", "currency": "USD", "account_type": "CHECKING" } },
+    "DE12500105175487661300": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Al Amal Trading Company", "currency": "USD", "account_type": "CHECKING" } },
+    "DE88200505106524587600": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Mueller Logistik GmbH", "currency": "EUR", "account_type": "CHECKING" } },
+    "US89123456789012345678": { "data": { "exists": true, "status": "ACTIVE", "account_name": "Anderson Financial Group Inc", "currency": "USD", "account_type": "CHECKING" } }
+  },
+  "balances": {
+    "DE89370400440532013000": { "data": { "current": 100000.0, "available": 95000.0 } },
+    "US12345678901234567890": { "data": { "current": 500.0, "available": 200.0 } },
+    "IN400111001234567890": { "data": { "current": 50000.0, "available": 0.0 } },
+    "GB29NWBK60161331926819": { "data": { "current": 0.0, "available": 0.0 } },
+    "JP3500000000123456789012": { "data": { "current": 25000.0, "available": 20000.0 } },
+    "IN001111111111111111111": { "fault": { "type": "http_error", "status_code": 500 } },
+    "JP002222222222222222222": { "fault": { "type": "timeout", "delay_seconds": 15 } },
+    "DE00333333333333333333": { "fault": { "type": "invalid_data", "payload": { "current": -500.0, "available": -200.0 } } }
+  }
+}

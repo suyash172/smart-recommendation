@@ -1,0 +1,247 @@
+# Smart-Recommendation System OpenAPI Specification
+
+openapi: 3.0.3
+info:
+  title: Smart-Recommendation API
+  description: |
+    API Gateway for the Smart-Recommendation system.
+  version: 2.0.0
+servers:
+  - url: http://localhost:8000
+    description: Local Development Server
+
+paths:
+  /retry-decision:
+    post:
+      tags:
+        - Decision Engine
+      summary: Submit a failed transaction for retry recommendation
+      description: |
+        Receives a failed transaction payload. If `retry_count` meets the max limit, 
+        a circuit breaker returns `DONT_RETRY` immediately. Otherwise, it triggers the AI Agent loop.
+      operationId: getRetryDecision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryRecommendationRequest'
+      responses:
+        '200':
+          description: Successful decision returned by the Agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetryRecommendationResponse'
+        '400':
+          description: Invalid input payload
+        '429':
+          description: Circuit breaker triggered (Max retry limit reached)
+
+  /dashboard/metrics:
+    get:
+      tags:
+        - Observability
+      summary: Get high-level KPI metrics for the dashboard
+      description: Returns STP Rate Enhancement, Automation Savings, and Failure Distribution.
+      operationId: getDashboardMetrics
+      responses:
+        '200':
+          description: KPI metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+
+  /dashboard/transactions:
+    get:
+      tags:
+        - Observability
+      summary: Get live transaction ticker stream
+      description: Returns a list of recent transactions and their statuses for the live UI feed.
+      operationId: getTransactionTicker
+      responses:
+        '200':
+          description: List of recent transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionAuditRecord'
+
+  /transactions/{transaction_id}/reasoning:
+    get:
+      tags:
+        - Observability
+      summary: Get Agent's step-by-step internal reasoning
+      description: Returns the 'Chain of Thought' and tool logs for a specific transaction.
+      operationId: getAgentReasoning
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed reasoning path
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentReasoning'
+
+components:
+  schemas:
+    PartyDetails:
+      type: object
+      description: |
+        Payment party details. Used for both the ordering customer (payer)
+        and the beneficiary (creditor).
+      required:
+        - name
+        - account_number
+        - bic_code
+      properties:
+        name:
+          type: string
+          description: Full legal name of the party.
+          example: "Acme GmbH"
+        account_number:
+          type: string
+          description: Account number / IBAN of the party.
+          example: "DE89370400440532013000"
+        bic_code:
+          type: string
+          description: BIC (Business Identifier Code) of the party's bank.
+          example: "COBADEFFXXX"
+
+    RetryRecommendationRequest:
+      type: object
+      required:
+        - transaction_id
+        - amount
+        - currency
+        - payment_rail
+        - failure_code
+        - failure_reason
+        - ordering_customer
+        - beneficiary
+        - timestamp
+      properties:
+        transaction_id:
+          type: string
+          example: "TXN-998877"
+        amount:
+          type: number
+          format: float
+          example: 1500.50
+        currency:
+          type: string
+          example: "USD"
+        payment_rail:
+          type: string
+          enum: [RTGS, NEFT, SEPA, SWIFT, Faster Payments, ACH]
+        failure_code:
+          type: string
+          example: "NETWORK_TIMEOUT"
+        failure_reason:
+          type: string
+          example: "Connection timed out during handshake"
+        ordering_customer:
+          $ref: '#/components/schemas/PartyDetails'
+          description: The entity initiating the payment (payer).
+        beneficiary:
+          $ref: '#/components/schemas/PartyDetails'
+          description: The recipient of the funds (creditor).
+        timestamp:
+          type: string
+          format: date-time
+        retry_count:
+          type: integer
+          example: 1
+
+    RetryRecommendationResponse:
+      type: object
+      required:
+        - transaction_id
+        - recommendation
+        - confidence_score
+        - explanation
+      properties:
+        transaction_id:
+          type: string
+          description: Echo of the transaction id from the request.
+          example: "TXN-998877"
+        recommendation:
+          type: string
+          enum: [RETRY_NOW, RETRY_LATER, RETRY_AFTER_UPDATE, DONT_RETRY, NO_RECOMMENDATION]
+          description: |
+            NO_RECOMMENDATION is returned when no safe recommendation can be
+            produced (e.g. LLM connectivity failure or upstream verification
+            impossible within the agent loop budget).
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        explanation:
+          type: string
+          description: Human-readable reasoning.
+        optimal_timing:
+          type: string
+          format: date-time
+          description: Required if recommendation is RETRY_LATER.
+        correction_suggestions:
+          type: array
+          items:
+            type: string
+          description: Required if recommendation is RETRY_AFTER_UPDATE.
+
+    DashboardMetrics:
+      type: object
+      properties:
+        stp_rate_enhancement:
+          type: number
+          format: float
+        automation_savings_pct:
+          type: number
+          format: float
+        failure_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+
+    TransactionAuditRecord:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        recommendation:
+          type: string
+        status:
+          type: string
+
+    AgentReasoning:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        thought_process:
+          type: array
+          items:
+            type: object
+            properties:
+              step:
+                type: integer
+              action:
+                type: string
+              observation:
+                type: string
+        tool_logs:
+          type: array
+          items:
+            type: string

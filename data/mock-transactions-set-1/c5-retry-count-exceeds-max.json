@@ -1,0 +1,50 @@
+{
+  "scenario_id": "C5",
+  "name": "Retry count far above maximum (API contract)",
+  "category": "retry-limit",
+  "description": "Protocol-level check: a request with retry_count=10 (far above max_retry_count=3) is rejected by the circuit breaker with HTTP 429, DONT_RETRY, confidence exactly 1.0, and the transaction_id echoed back.",
+  "mock_bank_state": {
+    "bank_status": {},
+    "accounts": {},
+    "balances": {},
+    "fault_injection": null,
+    "note": "Bank state is irrelevant - the request is short-circuited before the agent runs."
+  },
+  "config": {
+    "max_retry_count": 3
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-0001",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NETWORK_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 10
+      },
+      "expected_http_status": 429,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-0001",
+        "recommendation": "DONT_RETRY",
+        "confidence_score": 1.0,
+        "explanation": "Max retry limit reached. The transaction has already been retried 10 times, exceeding the configured maximum (max_retry_count=3). No further retries will be attempted.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "Deterministic short-circuit response; no LLM involvement. Confidence exactly 1.0; transaction_id echoed."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "scenario_id": "E14",
+  "name": "Name differs in word order (fuzzy)",
+  "category": "name-mismatch",
+  "description": "Fuzzy name match: transaction name 'Trading Al-Amal International' vs registered 'Al-Amal International Trading' (same words, reordered). Expected: LLM recognises these as the SAME entity with reordered words and recommends RETRY_AFTER_UPDATE with a suggestion to use the exact registered name.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Al-Amal International Trading",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E14-WORDORDER",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NAME_MISMATCH",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Trading Al-Amal International",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E14-WORDORDER",
+        "recommendation": "RETRY_AFTER_UPDATE",
+        "confidence_score": 0.85,
+        "explanation": "The submitted beneficiary name 'Trading Al-Amal International' contains exactly the same words as the registered name 'Al-Amal International Trading', only in a different order. This is the same entity, so the name should be corrected to the exact registered word order before retrying.",
+        "optimal_timing": null,
+        "correction_suggestions": [
+          "Update the beneficiary name to the exact registered word order: Al-Amal International Trading."
+        ]
+      },
+      "notes": "Word-order tolerance: identical token set in different order should be treated as the same entity. Suggestions must reference name/beneficiary/match/correct/update/registered/order."
+    }
+  ]
+}

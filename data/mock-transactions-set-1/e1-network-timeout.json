@@ -1,0 +1,58 @@
+{
+  "scenario_id": "E1",
+  "name": "Transient network failure - bank online",
+  "category": "network-failure",
+  "description": "Bank is ONLINE and the beneficiary account is ACTIVE, but the transaction failed with NETWORK_TIMEOUT. The agent should verify the bank/account state and recommend a retry.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Test Account Holder",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-0001",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NETWORK_TIMEOUT",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-0001",
+        "recommendation": "RETRY_NOW",
+        "confidence_score": 0.9,
+        "explanation": "The beneficiary bank (DEUTDEFF) is ONLINE and the beneficiary account DE89370400440532013000 is ACTIVE. The failure code NETWORK_TIMEOUT indicates a transient network-level issue rather than a problem with the payment details. No data correction or waiting period is required, so the transaction can be retried immediately.",
+        "optimal_timing": null,
+        "correction_suggestions": null
+      },
+      "notes": "Bank verified ONLINE and account ACTIVE; NETWORK_TIMEOUT is a transient glitch - retry immediately with high confidence (>= 0.7). optimal_timing and correction_suggestions are null because RETRY_NOW requires neither."
+    }
+  ]
+}

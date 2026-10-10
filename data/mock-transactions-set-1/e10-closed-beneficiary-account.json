@@ -1,0 +1,61 @@
+{
+  "scenario_id": "E10",
+  "name": "Closed beneficiary account",
+  "category": "account-failure",
+  "description": "Beneficiary account is CLOSED. Depending on whether an alternative valid beneficiary can be identified, the agent may recommend RETRY_AFTER_UPDATE (with suggestions referencing the closed beneficiary details) or DONT_RETRY (permanently closed, no viable path).",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "CLOSED",
+        "account_name": "Test Account Holder",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E10-CLOSED",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "ACCOUNT_CLOSED",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Test Account Holder",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E10-CLOSED",
+        "recommendation": "RETRY_AFTER_UPDATE",
+        "confidence_score": 0.8,
+        "explanation": "Verification shows the beneficiary account DE89370400440532013000 has been CLOSED at the bank, so the payment cannot be credited to it. The ordering customer must obtain updated beneficiary details (a new active IBAN/BIC) from the beneficiary before the transaction can be retried.",
+        "optimal_timing": null,
+        "correction_suggestions": [
+          "Obtain the beneficiary's current active IBAN and BIC - account DE89370400440532013000 is closed.",
+          "Update the beneficiary name and account details in the payment order to match the new account."
+        ]
+      },
+      "notes": "Alternative acceptable outcome: DONT_RETRY if the agent judges the closure permanent with no viable update path. If RETRY_AFTER_UPDATE, suggestions must reference the beneficiary details (new IBAN/BIC/name for the closed account)."
+    }
+  ]
+}

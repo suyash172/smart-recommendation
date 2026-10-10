@@ -1,0 +1,60 @@
+{
+  "scenario_id": "E13",
+  "name": "Name differs only in punctuation / abbreviation (fuzzy)",
+  "category": "name-mismatch",
+  "description": "Fuzzy name match: transaction name 'Al-Amal Trading Co.' vs registered 'Al Amal Trading Company' (hyphen removed, 'Co.' expanded to 'Company'). Expected: LLM recognises these as the SAME entity despite formatting differences and recommends RETRY_AFTER_UPDATE with a suggestion to use the exact registered name.",
+  "mock_bank_state": {
+    "bank_status": {
+      "DEUTDEFF": {
+        "bank_status": "ONLINE",
+        "estimated_recovery": null
+      }
+    },
+    "accounts": {
+      "DE89370400440532013000": {
+        "exists": true,
+        "status": "ACTIVE",
+        "account_name": "Al Amal Trading Company",
+        "currency": "USD"
+      }
+    },
+    "balances": {},
+    "fault_injection": null
+  },
+  "api_requests": [
+    {
+      "request": {
+        "transaction_id": "TXN-E2E-E13-PUNCT",
+        "amount": 1500.5,
+        "currency": "USD",
+        "payment_rail": "RTGS",
+        "failure_code": "NAME_MISMATCH",
+        "failure_reason": "Simulated upstream failure for E2E testing",
+        "ordering_customer": {
+          "name": "Globex Manufacturing Ltd",
+          "account_number": "DE02120300000000202051",
+          "bic_code": "COBADEFFXXX"
+        },
+        "beneficiary": {
+          "name": "Al-Amal Trading Co.",
+          "account_number": "DE89370400440532013000",
+          "bic_code": "DEUTDEFF"
+        },
+        "timestamp": "2026-09-26T10:00:00Z",
+        "retry_count": 1
+      },
+      "expected_http_status": 200,
+      "expected_response": {
+        "transaction_id": "TXN-E2E-E13-PUNCT",
+        "recommendation": "RETRY_AFTER_UPDATE",
+        "confidence_score": 0.85,
+        "explanation": "The submitted beneficiary name 'Al-Amal Trading Co.' differs from the registered name 'Al Amal Trading Company' only in punctuation (hyphen) and abbreviation ('Co.' vs 'Company'). These are clearly the same entity, so using the exact registered name will resolve the mismatch.",
+        "optimal_timing": null,
+        "correction_suggestions": [
+          "Update the beneficiary name to exactly match the registered name: Al Amal Trading Company."
+        ]
+      },
+      "notes": "Punctuation/abbreviation tolerance: hyphens and 'Co.' vs 'Company' should not be treated as a real mismatch. Suggestions must reference name/beneficiary/match/correct/update/registered/exact."
+    }
+  ]
+}
