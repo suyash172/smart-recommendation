@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from app.api import names   
 
 from app.agent.orchestrator import DecisionAgent, NotConfiguredAgent
 from app.api import admin, retry_decision
@@ -49,6 +50,7 @@ def create_app(settings: Settings | None = None, agent: DecisionAgent | None = N
 
     app.include_router(retry_decision.router)
     app.include_router(admin.router)
+    app.include_router(names.router)
 
     @app.get("/health")
     def health():
